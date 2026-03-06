@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Simulateur BFI Trilingue</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+body{
+font-family:Inter,Arial;
+background:linear-gradient(135deg,#eef2ff,#f8fafc);
+margin:0;
+padding:40px;
+}
+.container{
+max-width:900px;
+margin:auto;
+background:white;
+padding:35px;
+border-radius:16px;
+box-shadow:0 15px 40px rgba(0,0,0,0.08);
+}
+h1{text-align:center;margin-bottom:10px}
+.subtitle{text-align:center;color:#666;margin-bottom:30px}
+.grid{
+display:grid;
+grid-template-columns:1fr 120px 80px;
+gap:10px;
+margin-bottom:10px;
+align-items:center;
+}
+.header{font-weight:600;color:#444}
+input{
+padding:6px;
+border-radius:6px;
+border:1px solid #ddd;
+}
+select{
+padding:8px;
+border-radius:6px;
+margin-bottom:20px;
+}
+.result{
+margin-top:25px;
+padding:20px;
+background:#f1f5ff;
+border-radius:10px;
+font-size:20px;
+text-align:center;
+font-weight:600;
+}
+.small{
+font-size:14px;
+color:#666;
+text-align:center;
+margin-top:8px
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Simulateur BFI Trilingue</h1>
+<p class="subtitle">Moyenne live • Coefficients modifiables • Avec ou sans options</p>
+
+<label>Mode :</label>
+<select id="mode" onchange="chargerMode()">
+<option value="sans">BFI trilingue sans options</option>
+<option value="avec">BFI trilingue avec options</option>
+</select>
+
+<div class="grid header">
+<div>Matière</div>
+<div>Note</div>
+<div>Coeff</div>
+</div>
+
+<div id="matieres"></div>
+
+<div class="result" id="result">Entre des notes pour voir ta moyenne</div>
+<div class="small" id="details"></div>
+
+</div>
+
+<script>
+
+const baseMatieres=[
+{nom:"Français oral",coeff:5,type:"final"},
+{nom:"Français écrit",coeff:5,type:"final"},
+{nom:"Philosophie",coeff:8,type:"final"},
+{nom:"Grand oral",coeff:10,type:"final"},
+{nom:"Spécialité 1",coeff:16,type:"final"},
+{nom:"Spécialité 2",coeff:16,type:"final"},
+{nom:"Spécialité de première",coeff:8,type:"cc"},
+{nom:"ACL",coeff:20,type:"final"},
+{nom:"Histoire‑Géo (anglais)",coeff:20,type:"final"},
+{nom:"Connaissance du monde",coeff:20,type:"final"},
+{nom:"LVA anglais",coeff:3,type:"cc"},
+{nom:"Enseignement scientifique",coeff:3,type:"cc"},
+{nom:"EMC",coeff:1,type:"cc"},
+{nom:"EPS",coeff:6,type:"cc"}
+]
+
+const options=[
+{nom:"Option 1",coeff:2,type:"cc"},
+{nom:"Option 2",coeff:2,type:"cc"}
+]
+
+let matieres=[]
+
+function chargerMode(){
+
+const mode=document.getElementById("mode").value
+
+matieres=[...baseMatieres]
+
+if(mode==="avec"){
+matieres=[...matieres,...options]
+}
+
+render()
+calcul()
+}
+
+function render(){
+
+const container=document.getElementById("matieres")
+container.innerHTML=""
+
+matieres.forEach((m,i)=>{
+
+const row=document.createElement("div")
+row.className="grid"
+
+row.innerHTML=`
+<div>${m.nom}</div>
+<input type="number" id="note${i}" min="0" max="20" step="0.01" oninput="calcul()">
+<input type="number" id="coeff${i}" value="${m.coeff}" oninput="calcul()">
+`
+
+container.appendChild(row)
+
+})
+
+}
+
+function calcul(){
+
+let total=0
+let coeffTotal=0
+
+let totalFinal=0
+let coeffFinal=0
+
+let totalCC=0
+let coeffCC=0
+
+matieres.forEach((m,i)=>{
+
+let note=parseFloat(document.getElementById("note"+i)?.value)
+let coeff=parseFloat(document.getElementById("coeff"+i)?.value)
+
+if(!isNaN(note) && !isNaN(coeff)){
+
+ total+=note*coeff
+ coeffTotal+=coeff
+
+ if(m.type==="final"){
+ totalFinal+=note*coeff
+ coeffFinal+=coeff
+ }
+
+ if(m.type==="cc"){
+ totalCC+=note*coeff
+ coeffCC+=coeff
+ }
+
+}
+
+})
+
+if(coeffTotal===0) return
+
+let moyenne=total/coeffTotal
+
+let mention=""
+
+if(moyenne>=18) mention="Mention Très Bien avec félicitations du jury"
+else if(moyenne>=16) mention="Mention Très Bien"
+else if(moyenne>=14) mention="Mention Bien"
+else if(moyenne>=12) mention="Mention Assez Bien"
+else if(moyenne>=10) mention="Admis"
+else mention="Ajourné"
+
+let moyenneFinal=coeffFinal? (totalFinal/coeffFinal).toFixed(2):"-"
+let moyenneCC=coeffCC? (totalCC/coeffCC).toFixed(2):"-"
+
+
+document.getElementById("result").innerText=
+`Moyenne estimée : ${moyenne.toFixed(2)} /20 — ${mention}`
+
+
+document.getElementById("details").innerText=
+`Épreuves finales : ${moyenneFinal}   |   Contrôle continu : ${moyenneCC}`
+
+}
+
+chargerMode()
+
+</script>
+
+</body>
+</html>
